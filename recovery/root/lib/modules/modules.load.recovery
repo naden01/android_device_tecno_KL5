@@ -183,3 +183,4 @@ tran_perf_util.ko
 adaptive-ts.ko
 omnivision_td4160.ko
 transsion_thermal_ntc.ko
+regulator-vibrator.ko
