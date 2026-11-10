@@ -150,3 +150,7 @@ tran_fp.ko
 tran_fp.ko
 tran_auto_test.ko
 transsion_thermal_ntc.ko
+v4l2-flash-led-class.ko
+flashlight.ko
+aw36515.ko
+leds-mt6370-flash.ko

@@ -184,3 +184,7 @@ adaptive-ts.ko
 omnivision_td4160.ko
 transsion_thermal_ntc.ko
 regulator-vibrator.ko
+v4l2-flash-led-class.ko
+flashlight.ko
+aw36515.ko
+leds-mt6370-flash.ko

@@ -19,6 +19,3 @@ PRODUCT_MODEL := TECNO KL5
 PRODUCT_MANUFACTURER := tecno
 
 PRODUCT_GMS_CLIENTID_BASE := android-tecno
-
-# Apply JDM haptics patch before building recovery
-$(shell $(LOCAL_PATH)/apply_jdm_haptics_patch.sh >/dev/null 2>&1)

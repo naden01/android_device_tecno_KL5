@@ -187,3 +187,7 @@
 /lib/modules/mtk_mm_heap.ko:
 /lib/modules/uload_ind.ko: /lib/modules/load_track.ko
 /lib/modules/mac80211.ko: /lib/modules/cfg80211.ko
+/lib/modules/v4l2-flash-led-class.ko:
+/lib/modules/flashlight.ko: /lib/modules/mtk_pbm.ko /lib/modules/mtk_mdpm_v1.ko /lib/modules/mtk_dynamic_loading_throttling.ko /lib/modules/mtk_low_battery_throttling.ko
+/lib/modules/aw36515.ko: /lib/modules/flashlight.ko /lib/modules/mtk_pbm.ko /lib/modules/mtk_mdpm_v1.ko /lib/modules/mtk_dynamic_loading_throttling.ko /lib/modules/mtk_low_battery_throttling.ko
+/lib/modules/leds-mt6370-flash.ko: /lib/modules/v4l2-flash-led-class.ko /lib/modules/flashlight.ko /lib/modules/mtk_pbm.ko /lib/modules/mtk_mdpm_v1.ko /lib/modules/mtk_dynamic_loading_throttling.ko /lib/modules/mtk_low_battery_throttling.ko

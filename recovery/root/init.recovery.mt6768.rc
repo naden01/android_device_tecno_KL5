@@ -10,6 +10,10 @@ on init
 on boot
     start boot-hal-1-2
     start health-hal-2-1
+    symlink /sys/class/torch/torch/torch_level /of_flashlight/brightness
+    # kernel transient LED trigger: creates the activate/duration haptics files TWRP probes (its state defaults to off)
+    write /sys/class/leds/vibrator/trigger transient
+    write /sys/class/leds/vibrator/state 1
 on fs
     property:ro.debuggable=0
     start adbd

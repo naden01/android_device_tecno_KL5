@@ -47,7 +47,8 @@ export ALLOW_MISSING_DEPENDENCIES=true
 export LC_ALL="C"
 
 # flashlight
-export OF_FLASHLIGHT_ENABLE=0
+export OF_FLASHLIGHT_ENABLE=1
+export OF_FL_PATH1=/of_flashlight
 
 # patches
 if [ ! -d ${CCACHE_DIR} ];
