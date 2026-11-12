@@ -109,3 +109,7 @@ RECOVERY_LIBRARY_SOURCE_FILES += \
     $(TARGET_OUT_SHARED_LIBRARIES)/libion.so \
     $(TARGET_OUT_SHARED_LIBRARIES)/libxml2.so
 
+# create_pl_dev: preloader_raw_a/b as dm-linear, skipping the UFS 0x1000 / eMMC 0x800 header
+PRODUCT_PACKAGES += \
+    create_pl_dev
+

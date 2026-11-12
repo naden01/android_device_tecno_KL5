@@ -1,0 +1,22 @@
+//
+// SPDX-FileCopyrightText: 2024 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// The rc lives in recovery/root/init.recovery.mt6768.rc instead of an init_rc
+// entry, matching how the previous mtk_plpath_utils was wired in this tree.
+cc_binary {
+    name: "create_pl_dev",
+    srcs: ["create_pl_dev.cpp"],
+    // recovery: true is what actually installs the binary into the recovery ramdisk;
+    // recovery_available alone only makes it buildable for recovery, which is why
+    // /system/bin/create_pl_dev was missing and the pl devices were never created.
+    recovery: true,
+    static_libs: [
+        "libfs_mgr",
+    ],
+    shared_libs: [
+        "libbase",
+        "liblog",
+    ],
+}

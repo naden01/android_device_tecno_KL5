@@ -1,60 +1,62 @@
-#!/bin/bash
+#
+#	This file is part of the OrangeFox Recovery Project
+# 	Copyright (C) 2025 The OrangeFox Recovery Project
+#
+#	OrangeFox is free software: you can redistribute it and/or modify
+#	it under the terms of the GNU General Public License as published by
+#	the Free Software Foundation; either version 3 of the License, or
+#	any later version.
+#
+#	OrangeFox is distributed in the hope that it will be useful,
+#	but WITHOUT ANY WARRANTY; without even the implied warranty of
+#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#	GNU General Public License for more details.
+#
+# 	This software is released under GPL version 3 or any later version.
+#	See <http://www.gnu.org/licenses/>.
+#
+# 	Please maintain this if you use this script or any part of it
+#
 
-export OF_DISABLE_OTA_MENU=1
-export FOX_AB_DEVICE=1
-export FOX_VIRTUAL_AB_DEVICE=1
-export OF_DEFAULT_KEYMASTER_VERSION=4.1
-export OF_NO_TREBLE_COMPATIBILITY_CHECK=1
+#device
+# FOX_TARGET_DEVICES is left unset on purpose: it then inherits TARGET_OTA_ASSERT_DEVICE
+# (TECNO-KL5,TECNO-KL5n,KL5,KL5n) from BoardConfig.mk, which covers both KL5 variants.
+export TARGET_DEVICE_ALT=KL5n
 
-export FOX_USE_BASH_SHELL=1
-export FOX_USE_NANO_EDITOR=1
-export FOX_USE_TAR_BINARY=1
-export FOX_USE_SED_BINARY=1
-export FOX_USE_XZ_UTILS=1
-export FOX_ASH_IS_BASH=1
-export OF_ENABLE_LPTOOLS=1
-export FOX_DELETE_AROMAFM=1
-export FOX_ENABLE_APP_MANAGER=1
-export OF_SUPPORT_VBMETA_AVB2_PATCHING=1
-
-export FOX_USE_DATA_RECOVERY_FOR_SETTINGS=1
-
-export OF_LOOP_DEVICE_ERRORS_TO_LOG=1
-
-export OF_USE_LZ4_COMPRESSION=true
-
-export OF_USE_MAGISKBOOT="1"
-export OF_USE_MAGISKBOOT_FOR_ALL_PATCHES="1"
-export OF_DONT_PATCH_ENCRYPTED_DEVICE="1"
-
-export FOX_RECOVERY_VENDOR_BOOT_PARTITION=true
-
-export OF_SCREEN_H=2400
-export OF_STATUS_H=95
-export OF_STATUS_INDENT_LEFT=48
-export OF_STATUS_INDENT_RIGHT=48
-export OF_ALLOW_DISABLE_NAVBAR=0
-export OF_CLOCK_POS=1
-
-# maintainer 
-export OF_MAINTAINER_AVATAR="$(gettop)/device/tecno/KL5/maintainer_avatar.png"
-cp "${OF_MAINTAINER_AVATAR}" "$(gettop)/bootable/recovery/gui/theme/portrait_hdpi/images/Default/About/maintainer.png"
-export OF_MAINTAINER="Nazephyrus"
-export FOX_VARIANT="A12+"
-
-# Important build settings
-export ALLOW_MISSING_DEPENDENCIES=true
-export LC_ALL="C"
-
-# flashlight
-export OF_FLASHLIGHT_ENABLE=1
-export OF_FL_PATH1=/of_flashlight
-
-# patches
-if [ ! -d ${CCACHE_DIR} ];
-then
-  echo "CCACHE Directory/Partition is not mounted at \"${CCACHE_DIR}\""
-  echo "Please edit the CCACHE_DIR build variable or mount the directory."
+# maintainer avatar (OF_MAINTAINER is in fox.mk; OrangeFox_A14.sh never copies the avatar itself)
+OF_MAINTAINER_TREE="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+export OF_MAINTAINER_AVATAR="$OF_MAINTAINER_TREE/maintainer_avatar.png"
+OF_THEME_ABOUT="$(gettop 2>/dev/null || true)/bootable/recovery/gui/theme/portrait_hdpi/images/Default/About"
+if [ -f "$OF_MAINTAINER_AVATAR" ] && [ -d "$OF_THEME_ABOUT" ]; then
+	cp -f "$OF_MAINTAINER_AVATAR" "$OF_THEME_ABOUT/maintainer.png"
 fi
 
-export LC_ALL="C"
+# other
+export FOX_VIRTUAL_AB_DEVICE=1
+export FOX_ENABLE_APP_MANAGER=1
+export FOX_VENDOR_BOOT_RECOVERY=1
+export FOX_INSTALLER_VENDOR_BOOT_RAMDISK_INSTALL=0
+export FOX_RECOVERY_VENDOR_BOOT_PARTITION="/dev/block/by-name/vendor_boot"
+export FOX_RECOVERY_SYSTEM_PARTITION="/dev/block/mapper/system"
+export FOX_RECOVERY_VENDOR_PARTITION="/dev/block/mapper/vendor"
+export FOX_USE_XZ_UTILS=1
+export FOX_USE_BASH_SHELL=1
+export FOX_ASH_IS_BASH=1
+export FOX_USE_TAR_BINARY=1
+export FOX_USE_LZ4_BINARY=1
+export FOX_USE_SED_BINARY=1
+export FOX_USE_ZSTD_BINARY=1
+export FOX_USE_NANO_EDITOR=1
+export FOX_USE_UPDATED_MAGISKBOOT=1
+export FOX_DELETE_AROMAFM=1
+export FOX_USE_DATE_BINARY=1
+# system/system_ext/product/vendor are erofs
+export FOX_USE_FSCK_EROFS_BINARY=1
+# FOX_MOVE_MAGISK_INSTALLER_TO_RAMDISK is left unset: it copies the 11 MiB Magisk.zip
+# into the ramdisk and overflows vendor_boot (64 MiB). Magisk still installs from /sdcard.
+export FOX_BUILD_TYPE="stable"
+
+# KSU, etc.
+	export FOX_ENABLE_KERNELSU_SUPPORT=1
+	export FOX_ENABLE_KERNELSU_NEXT_SUPPORT=1
+	export FOX_ENABLE_SUKISU_SUPPORT=1
