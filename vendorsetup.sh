@@ -35,7 +35,11 @@ fi
 export FOX_VIRTUAL_AB_DEVICE=1
 export FOX_ENABLE_APP_MANAGER=1
 export FOX_VENDOR_BOOT_RECOVERY=1
-export FOX_INSTALLER_VENDOR_BOOT_RAMDISK_INSTALL=0
+# 1 = swap only the recovery ramdisk inside the device's own vendor_boot (this is
+# OrangeFox_A14.sh:581's default, and what the booting c44cc93 build + the working
+# LH8n tree both use). 0 makes the zip overwrite the whole vendor_boot partition by
+# writing recovery.img to vendor_boot_a/_b, which a virtual-A/B device does not have.
+export FOX_INSTALLER_VENDOR_BOOT_RAMDISK_INSTALL=1
 export FOX_RECOVERY_VENDOR_BOOT_PARTITION="/dev/block/by-name/vendor_boot"
 export FOX_RECOVERY_SYSTEM_PARTITION="/dev/block/mapper/system"
 export FOX_RECOVERY_VENDOR_PARTITION="/dev/block/mapper/vendor"
