@@ -31,7 +31,7 @@ on post-fs
     symlink /dev/block/platform/bootdevice/by-name/preloader_b /dev/block/platform/bootdevice/by-name/preloader_ufs_b
     symlink /dev/block/platform/bootdevice/by-name/preloader_b /dev/block/by-name/preloader_ufs_b
 
-    # preloader_raw_a/b come from create_pl_dev below
+    # preloader_raw_a/b wiring is disabled while bisecting the ddd781f no-splash regression
 
 on property:ro.crypto.state=encrypted && property:ro.crypto.type=file
     install_keyring
@@ -105,21 +105,5 @@ service create_pl_dev /system/bin/create_pl_dev
     oneshot
     disabled
     seclabel u:r:recovery:s0
-
-on boot
-    start create_pl_dev
-
-    # the dm devices appear within milliseconds of the service starting, and 'on boot'
-    # actions from this file run before the recovery service is started, so a short
-    # bound keeps a failure from delaying the UI
-    wait /dev/block/mapper/preloader_raw_a 2
-    wait /dev/block/mapper/preloader_raw_b 2
-
-    # keep the old naming alive for anything that resolved preloader_raw_* through it
-    symlink /dev/block/mapper/preloader_raw_a /dev/block/mapper/pl_a
-    symlink /dev/block/mapper/preloader_raw_b /dev/block/mapper/pl_b
-
-    symlink /dev/block/mapper/preloader_raw_a /dev/block/by-name/preloader_raw_a
-    symlink /dev/block/mapper/preloader_raw_b /dev/block/by-name/preloader_raw_b
-    symlink /dev/block/mapper/preloader_raw_a /dev/block/platform/bootdevice/by-name/preloader_raw_a
-    symlink /dev/block/mapper/preloader_raw_b /dev/block/platform/bootdevice/by-name/preloader_raw_b
+    # shortcut: not started at boot while bisecting the ddd781f no-splash regression (KL5);
+    # re-add a boot trigger (post-fs-data, not 'on boot') once the regression is isolated
