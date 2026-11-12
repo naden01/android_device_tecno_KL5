@@ -1,2 +1,7 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# AOSP libmodprobe's ParseCfg() does not strip a trailing CR, so a CRLF
+# working tree breaks module loading (bootloop). core.eol=native gives CRLF
+# on a Windows checkout, so pin these to LF explicitly.
+recovery/root/lib/modules/modules.* text eol=lf
