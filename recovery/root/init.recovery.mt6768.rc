@@ -97,14 +97,3 @@ on property:twrp.all.users.decrypted=true
     stop keymaster-4-1
     stop gatekeeper-1-0
     stop tee-1-1
-
-# create_pl_dev: dm-linear view of the preloader payload in each boot container, so
-# preloader_raw_a/b can be flashed without touching the UFS 0x1000 / eMMC 0x800 header.
-service create_pl_dev /system/bin/create_pl_dev
-    user root
-    group root system
-    oneshot
-    disabled
-    seclabel u:r:recovery:s0
-    # shortcut: not started at boot while bisecting the ddd781f no-splash regression (KL5);
-    # re-add a boot trigger (post-fs-data, not 'on boot') once the regression is isolated
