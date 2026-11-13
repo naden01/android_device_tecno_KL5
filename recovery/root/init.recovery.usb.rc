@@ -58,6 +58,10 @@ on boot
     # for usb otg sdcard hot plug detection
     write /sys/module/block/parameters/events_dfl_poll_msecs 1000
 
+    # arm Transsion OTG host path; stock Android and the working LH8n/BG7 recoveries all do this
+    chmod 0666 /sys/devices/platform/odm/odm:tran_battery/OTG_CTL
+    write /sys/devices/platform/odm/odm:tran_battery/OTG_CTL "1"
+
 on property:init.svc.adbd=stopped
     setprop sys.usb.ffs.ready 0
 
