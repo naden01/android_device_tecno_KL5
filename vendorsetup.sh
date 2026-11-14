@@ -50,6 +50,11 @@ export LC_ALL="C"
 export OF_FLASHLIGHT_ENABLE=1
 export OF_FL_PATH1=/of_flashlight
 
+# KernelSU
+export FOX_ENABLE_KERNELSU_SUPPORT=1
+export FOX_ENABLE_KERNELSU_NEXT_SUPPORT=1
+export FOX_ENABLE_SUKISU_SUPPORT=1
+
 # patches
 if [ ! -d ${CCACHE_DIR} ];
 then
