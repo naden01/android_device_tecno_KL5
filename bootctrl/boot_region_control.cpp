@@ -1,42 +1,14 @@
-/*****************************************************************************
-*  Copyright Statement:
-*  --------------------
-*  This software is protected by Copyright and the information contained
-*  herein is confidential. The software may not be copied and the information
-*  contained herein may not be used or disclosed except with the written
-*  permission of MediaTek Inc. (C) 2020
-*
-*  BY OPENING THIS FILE, BUYER HEREBY UNEQUIVOCALLY ACKNOWLEDGES AND AGREES
-*  THAT THE SOFTWARE/FIRMWARE AND ITS DOCUMENTATIONS ("MEDIATEK SOFTWARE")
-*  RECEIVED FROM MEDIATEK AND/OR ITS REPRESENTATIVES ARE PROVIDED TO BUYER ON
-*  AN "AS-IS" BASIS ONLY. MEDIATEK EXPRESSLY DISCLAIMS ANY AND ALL WARRANTIES,
-*  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF
-*  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR NONINFRINGEMENT.
-*  NEITHER DOES MEDIATEK PROVIDE ANY WARRANTY WHATSOEVER WITH RESPECT TO THE
-*  SOFTWARE OF ANY THIRD PARTY WHICH MAY BE USED BY, INCORPORATED IN, OR
-*  SUPPLIED WITH THE MEDIATEK SOFTWARE, AND BUYER AGREES TO LOOK ONLY TO SUCH
-*  THIRD PARTY FOR ANY WARRANTY CLAIM RELATING THERETO. MEDIATEK SHALL ALSO
-*  NOT BE RESPONSIBLE FOR ANY MEDIATEK SOFTWARE RELEASES MADE TO BUYER'S
-*  SPECIFICATION OR TO CONFORM TO A PARTICULAR STANDARD OR OPEN FORUM.
-*
-*  BUYER'S SOLE AND EXCLUSIVE REMEDY AND MEDIATEK'S ENTIRE AND CUMULATIVE
-*  LIABILITY WITH RESPECT TO THE MEDIATEK SOFTWARE RELEASED HEREUNDER WILL BE,
-*  AT MEDIATEK'S OPTION, TO REVISE OR REPLACE THE MEDIATEK SOFTWARE AT ISSUE,
-*  OR REFUND ANY SOFTWARE LICENSE FEES OR SERVICE CHARGE PAID BY BUYER TO
-*  MEDIATEK FOR SUCH MEDIATEK SOFTWARE AT ISSUE.
-*
-*  THE TRANSACTION CONTEMPLATED HEREUNDER SHALL BE CONSTRUED IN ACCORDANCE
-*  WITH THE LAWS OF THE STATE OF CALIFORNIA, USA, EXCLUDING ITS CONFLICT OF
-*  LAWS PRINCIPLES.  ANY DISPUTES, CONTROVERSIES OR CLAIMS ARISING THEREOF AND
-*  RELATED THERETO SHALL BE SETTLED BY ARBITRATION IN SAN FRANCISCO, CA, UNDER
-*  THE RULES OF THE INTERNATIONAL CHAMBER OF COMMERCE (ICC).
-*
-*****************************************************************************/
+/*
+ * Copyright (C) 2020 MediaTek Inc.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
+#include <cstdint>
 #include <errno.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <string.h>
-#include <string>
+#include <unistd.h>
 #include <android-base/logging.h>
 
 #if !defined(ARCH_X86)
@@ -50,59 +22,105 @@
 namespace android {
 namespace bootable {
 #if !defined(ARCH_X86)
-static bool ufs_set_active_boot_part(int boot)
-{
-    struct ufs_ioctl_query_data idata;
-    unsigned char buf[1];
-    int fd, ret = true;
 
-    fd = open("/dev/block/sdc", O_RDWR);
+#define CMD_ARG(b3, b2, b1, b0) (((b3) << 24) | ((b2) << 16) | ((b1) << 8) | (b0))
+
+static int mmc_read_ext_csd(int fd, uint8_t* ext_csd) {
+    struct mmc_ioc_cmd cmd;
+    memset(&cmd, 0, sizeof(cmd));
+    memset(ext_csd, 0, 512);
+
+    cmd.blocks = 1;
+    cmd.blksz = 512;
+    cmd.opcode = MMC_SEND_EXT_CSD;
+    cmd.flags = MMC_CMD_ADTC | MMC_RSP_R1;
+    mmc_ioc_cmd_set_data(cmd, ext_csd);
+
+    if (ioctl(fd, MMC_IOC_CMD, &cmd) < 0) {
+        LOG(ERROR) << "Failed to read ext csd: " << errno;
+        return -errno;
+    }
+    return 0;
+}
+
+static bool emmc_set_active_boot_part(int boot) {
+    uint8_t ext_csd[512];
+    int fd = open("/dev/block/mmcblk0", O_RDWR);
     if (fd < 0) {
-        printf("%s: open device failed, err: %d\n", __func__, fd);
+        LOG(ERROR) << "Failed to open /dev/block/mmcblk0: " << errno;
         return false;
     }
 
-    buf[0] = boot;           /* 1: BootLU A, 2: BootLU B */
+    if (mmc_read_ext_csd(fd, ext_csd) < 0) {
+        close(fd);
+        return false;
+    }
 
+    uint8_t cur = (ext_csd[EXT_CSD_PART_CONFIG] >> 3) & 0x07;
+    if (cur == static_cast<uint8_t>(boot)) {
+        close(fd);
+        return true;
+    }
+
+    uint8_t arg = (ext_csd[EXT_CSD_PART_CONFIG] & ~(0x38)) | ((boot & 0x07) << 3);
+    struct mmc_ioc_cmd cmd;
+    memset(&cmd, 0, sizeof(cmd));
+    cmd.opcode = MMC_SWITCH;
+    cmd.arg = CMD_ARG(MMC_SWITCH_MODE_WRITE_BYTE, EXT_CSD_PART_CONFIG, arg, EXT_CSD_CMD_SET_NORMAL);
+    cmd.flags = MMC_CMD_AC | MMC_RSP_R1B;
+    mmc_ioc_cmd_set_data(cmd, ext_csd);
+
+    bool ok = true;
+    if (ioctl(fd, MMC_IOC_CMD, &cmd) < 0) {
+        LOG(ERROR) << "MMC_IOC_CMD switch bootpart failed: " << errno;
+        ok = false;
+    }
+    close(fd);
+    return ok;
+}
+
+static bool ufs_set_active_boot_part(int boot) {
+    struct ufs_ioctl_query_data idata;
+    unsigned char buf[1];
+    int fd = open("/dev/block/sdc", O_RDWR);
+    if (fd < 0) {
+        LOG(ERROR) << "open /dev/block/sdc failed, err: " << errno;
+        return false;
+    }
+
+    buf[0] = static_cast<unsigned char>(boot); /* 1: BootLU A, 2: BootLU B */
     idata.opcode = UPIU_QUERY_OPCODE_WRITE_ATTR;
     idata.idn = QUERY_ATTR_IDN_BOOT_LUN_EN;
     idata.idx = 0;
     idata.buf_ptr = &buf[0];
     idata.buf_byte = 1;
 
+    bool ret = true;
     if (ioctl(fd, UFS_IOCTL_QUERY, &idata) < 0) {
-      LOG(ERROR) << "ufs_set boot_part fail";
-      ret = false;
+        LOG(ERROR) << "ufs_set boot_part fail: " << errno;
+        ret = false;
     }
     close(fd);
     return ret;
 }
 
 bool BootControlExt::SetBootRegionSlot(unsigned int slot) {
-  int boot_part = 0;
-
-
-  LOG(ERROR) << "setActiveBootSlot SetBootRegionSlot " << slot;
-  /* slot 0 is A , slot 1 is B */
-  if (slot >= 2) {
-    LOG(ERROR) << "Wrong Slot value " << slot;
-    return 0;
-  }
-
-  if(slot)
-    boot_part = 2;
-  else
-    boot_part = 1;
-
-  if (!ufs_set_active_boot_part(boot_part))
-      return false;
-
-  return true;
+    LOG(INFO) << "setActiveBootSlot SetBootRegionSlot " << slot;
+    if (slot >= 2) {
+        LOG(ERROR) << "Wrong Slot value " << slot;
+        return false;
+    }
+    int boot_part = slot ? 2 : 1;
+    if (access("/dev/block/mmcblk0", F_OK) == 0) {
+        return emmc_set_active_boot_part(boot_part);
+    }
+    return ufs_set_active_boot_part(boot_part);
 }
 #else
 bool BootControlExt::SetBootRegionSlot(unsigned int slot) {
-  return true;
+    (void)slot;
+    return true;
 }
-#endif //#if !defined(ARCH_X86)
-}
-}
+#endif
+}  // namespace bootable
+}  // namespace android

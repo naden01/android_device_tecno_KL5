@@ -12,7 +12,7 @@
 
 # Firmware
 /dtbo			emmc		/dev/block/by-name/dtbo											flags=display=dtbo;slotselect;backup
-/metadata		ext4		/dev/block/by-name/metadata										flags=display=metadata;backup
+/metadata		ext4		/dev/block/by-name/md_udc										flags=display=metadata;backup
 /misc			emmc		/dev/block/by-name/misc											flags=display=misc;backup
 
 # Sensitive Data

@@ -15,7 +15,7 @@ system_ext			/system_ext		ext4		ro																	wait,slotselect,logical
 
 
 # Userdata partition
-/dev/block/by-name/metadata	/metadata		ext4		noatime,nosuid,nodev,discard														wait,check,formattable
+/dev/block/by-name/md_udc	/metadata		ext4		noatime,nosuid,nodev,discard														wait,check,formattable
 /dev/block/by-name/userdata	/data			f2fs		noatime,nosuid,nodev,discard,noflush_merge,fsync_mode=nobarrier,reserve_root=134217,resgid=1065,inlinecrypt				wait,check,formattable,fileencryption=aes-256-xts:aes-256-cts:v2+inlinecrypt_optimized,keydirectory=/metadata/vold/metadata_encryption
 
 # Need to have this entry in here even though the mount point itself is no longer needed.

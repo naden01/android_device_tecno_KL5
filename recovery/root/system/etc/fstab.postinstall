@@ -24,3 +24,6 @@ system                    /postinstall erofs  ro,nosuid,nodev,noexec  slotselect
 /dev/block/mapper/system /postinstall ext4   ro,nosuid,nodev,noexec  slotselect_other
 /dev/block/mapper/system /postinstall erofs  ro,nosuid,nodev,noexec  slotselect_other
 
+
+vendor                    /postinstall ext4   ro,nosuid,nodev,noexec  slotselect_other,logical
+vendor                    /postinstall erofs  ro,nosuid,nodev,noexec  slotselect_other,logical

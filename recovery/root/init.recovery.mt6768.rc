@@ -8,7 +8,7 @@ on init
     setprop sys.usb.controller "musb-hdrc"
 
 on boot
-    start boot-hal-1-2
+    start vendor.boot-hal-1-2
     start health-hal-2-1
     symlink /sys/class/torch/torch/torch_level /of_flashlight/brightness
     # kernel transient LED trigger: creates the activate/duration haptics files TWRP probes (its state defaults to off)
